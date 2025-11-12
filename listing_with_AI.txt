@@ -1,0 +1,71 @@
+Історія чат-сесії (вибрані повідомлення та ключові дії)
+
+---
+1) Користувач: Створи вихідний файл за допомогою Copilot: У корені репозиторію створіть файл main.cpp з мінімальною програмою "Hello World".
+
+Асистент:
+- Додав `main.cpp` з короткою програмою Hello World:
+  #include <iostream>
+  int main() { std::cout << "Hello World" << std::endl; return 0; }
+- Скомпілював та запустив локально (g++), вивід: "Hello World".
+
+---
+2) Користувач: Створи у корені репозиторію файл CMakeLists.txt та напиши наповнення до нього.
+
+Асистент:
+- Додав `CMakeLists.txt` з мінімальною конфігурацією CMake (мінімум 3.10), вимога C++17, прапори попереджень, створення `main` (переважно `src/main.cpp`, fallback `main.cpp`) і правило install().
+- Надав інструкції для збірки в PowerShell.
+
+---
+3) Користувач: Створи у корені репозиторію новий файл listing_with_AI_CMake.txt. Запиши в ньому історію даного чату.
+
+Асистент:
+- Створив `listing_with_AI_CMake.txt` і записав до нього вибрану історію сесії (включно з вмістом `CMakeLists.txt` та виводом компіляції).
+- Закомітив і запушив файл у гілку `feature/develop/2`.
+
+---
+4) Користувач: 1] Створи нову гілку git з назвою feature/develop/03-Unit-tests на основі develop.
+             2] У корені репозиторію створи два нові файли: math_operations.h та math_operations.cpp з функцією додавання.
+
+Асистент:
+- Виконав `git fetch` і створив нову гілку `feature/develop/03-Unit-tests` на основі `origin/develop`.
+- Додав файли:
+  - `math_operations.h`:
+    #pragma once
+    int add(int a, int b);
+  - `math_operations.cpp`:
+    #include "math_operations.h"
+    int add(int a, int b) { return a + b; }
+- Закомітив та запушив гілку на origin.
+
+---
+5) Користувач: 1] Створення файлу юніт-тестів: Створи новий каталог tests. У ньому створи файл unit_tests.cpp. Напиши юніт тести в гілці feature/develop/03-Unit-tests
+             2] Створи в тій самій гілці кореневий CMakeLists.txt з підтримкою GoogleTest і ціллю unit_tests.
+
+Асистент:
+- Створив каталог `tests/` і файл `tests/unit_tests.cpp` з тестами GoogleTest для `add()`:
+  - PositiveNumbers, NegativeNumbers, MixedSign, LargeNumbers
+- Оновив кореневий `CMakeLists.txt`:
+  - Додав статичну бібліотеку `math_operations` з `math_operations.cpp`.
+  - Використав `FetchContent` для завантаження GoogleTest (release-1.14.0).
+  - Додав ціль `unit_tests`, лінкування з `gtest_main` і `math_operations`.
+  - Викликав `gtest_discover_tests(unit_tests)` і ввімкнув `enable_testing()`.
+- Закомітив та запушив зміни у `feature/develop/03-Unit-tests`.
+
+---
+6) Поточна дія (ця точна запис): Користувач попросив створити `listing_with_AI.txt` з історією чату і запушити в гілку `feature/develop/03-Unit-tests`.
+
+Асистент (виконав):
+- Створив цей файл `listing_with_AI.txt` у корені репозиторію з повною вибіркою історії сесії (цю довідку).
+- Закомітив і запушив зміни у гілку `feature/develop/03-Unit-tests`.
+
+---
+Примітки:
+- Усі операції з git виконувались локально у робочій копії проекту і були запушені в origin.
+- Для запуску тестів локально використовуйте:
+  mkdir build; cd build
+  cmake .. -G "MinGW Makefiles"
+  cmake --build . --config Release
+  ctest --output-on-failure
+
+Кінець транскрипту.
