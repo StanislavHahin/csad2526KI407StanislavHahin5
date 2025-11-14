@@ -1,0 +1,189 @@
+name: CI/CD Cross-Platform Build
+
+on:
+  push:
+    branches:
+      - '**develop**'
+      - '**master**'
+  pull_request:
+    branches:
+      - '**develop**'
+      - '**master**'
+
+jobs:
+  cross_build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+          - macos-latest
+        include:
+          - os: ubuntu-latest
+            cmake_generator: "Unix Makefiles"
+            build_dir: build
+          - os: windows-latest
+            cmake_generator: "MinGW Makefiles"
+            build_dir: build
+          - os: macos-latest
+            cmake_generator: "Unix Makefiles"
+            build_dir: build
+    
+    steps:
+      # Step 1: Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+      
+      # Step 2: Install dependencies
+      - name: Install dependencies (Ubuntu)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake build-essential git
+      
+      - name: Install dependencies (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          choco install cmake mingw-w64 -y
+          refreshenv
+      
+      - name: Install dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install cmake
+      
+      # Step 3: Verify CMake installation
+      - name: Verify CMake installation
+        run: |
+          cmake --version
+      
+      # Step 4: Configure project with CMake
+      - name: Create build directory
+        run: |
+          mkdir -p ${{ matrix.build_dir }}
+      
+      - name: Configure CMake
+        run: |
+          cd ${{ matrix.build_dir }}
+          cmake .. -G "${{ matrix.cmake_generator }}" -DENABLE_TESTS=ON
+      
+      # Step 5: Build project
+      - name: Build project
+        run: |
+          cd ${{ matrix.build_dir }}
+          cmake --build . --config Release
+      
+      # Step 6: Run tests with CTest
+      - name: Run unit tests
+        run: |
+          cd ${{ matrix.build_dir }}
+          ctest --output-on-failure --verbose
+      
+      # Step 7: Display build artifacts
+      - name: List build artifacts
+        if: success()
+        run: |
+          echo "=== Build Artifacts ==="
+          ls -la ${{ matrix.build_dir }}/
+          if [ -f "${{ matrix.build_dir }}/main.exe" ]; then
+            echo "✓ Windows executable found: main.exe"
+            ls -lh ${{ matrix.build_dir }}/main.exe
+          fi
+          if [ -f "${{ matrix.build_dir }}/main" ]; then
+            echo "✓ Unix executable found: main"
+            ls -lh ${{ matrix.build_dir }}/main
+          fi
+          if [ -f "${{ matrix.build_dir }}/unit_tests.exe" ]; then
+            echo "✓ Unit tests executable found: unit_tests.exe"
+            ls -lh ${{ matrix.build_dir }}/unit_tests.exe
+          fi
+          if [ -f "${{ matrix.build_dir }}/unit_tests" ]; then
+            echo "✓ Unit tests executable found: unit_tests"
+            ls -lh ${{ matrix.build_dir }}/unit_tests
+          fi
+        shell: bash
+      
+      # Step 8: Upload build artifacts (optional - for debugging)
+      - name: Upload build artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts-${{ matrix.os }}
+          path: |
+            ${{ matrix.build_dir }}/main
+            ${{ matrix.build_dir }}/main.exe
+            ${{ matrix.build_dir }}/unit_tests
+            ${{ matrix.build_dir }}/unit_tests.exe
+            ${{ matrix.build_dir }}/libmath_operations.a
+            ${{ matrix.build_dir }}/math_operations.lib
+          retention-days: 7
+          if-no-files-found: ignore
+      
+      # Step 9: Generate build report
+      - name: Generate build report
+        if: always()
+        run: |
+          echo "=== Build Report ===" >> ${{ github.workspace }}/BUILD_REPORT.txt
+          echo "OS: ${{ matrix.os }}" >> ${{ github.workspace }}/BUILD_REPORT.txt
+          echo "CMake Generator: ${{ matrix.cmake_generator }}" >> ${{ github.workspace }}/BUILD_REPORT.txt
+          echo "Build Status: ${{ job.status }}" >> ${{ github.workspace }}/BUILD_REPORT.txt
+          echo "Timestamp: $(date)" >> ${{ github.workspace }}/BUILD_REPORT.txt
+          cat ${{ github.workspace }}/BUILD_REPORT.txt
+      
+      # Step 10: Deploy (optional - prepare for deployment)
+      - name: Prepare deployment package
+        if: success()
+        run: |
+          mkdir -p deploy/${{ matrix.os }}
+          if [ -f "${{ matrix.build_dir }}/main.exe" ]; then
+            cp ${{ matrix.build_dir }}/main.exe deploy/${{ matrix.os }}/
+          fi
+          if [ -f "${{ matrix.build_dir }}/main" ]; then
+            cp ${{ matrix.build_dir }}/main deploy/${{ matrix.os }}/
+          fi
+          if [ -f "${{ matrix.build_dir }}/unit_tests.exe" ]; then
+            cp ${{ matrix.build_dir }}/unit_tests.exe deploy/${{ matrix.os }}/
+          fi
+          if [ -f "${{ matrix.build_dir }}/unit_tests" ]; then
+            cp ${{ matrix.build_dir }}/unit_tests deploy/${{ matrix.os }}/
+          fi
+          echo "Deployment package prepared for ${{ matrix.os }}"
+        shell: bash
+      
+      # Step 11: Upload deployment artifacts
+      - name: Upload deployment package
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-${{ matrix.os }}
+          path: deploy/${{ matrix.os }}/
+          retention-days: 30
+  
+  # Summary job
+  build_summary:
+    name: Build Summary
+    runs-on: ubuntu-latest
+    needs: cross_build
+    if: always()
+    
+    steps:
+      - name: Check build status
+        run: |
+          echo "=== Cross-Platform Build Summary ==="
+          echo "Ubuntu Build: ${{ needs.cross_build.result }}"
+          echo "Windows Build: ${{ needs.cross_build.result }}"
+          echo "macOS Build: ${{ needs.cross_build.result }}"
+          if [ "${{ needs.cross_build.result }}" = "success" ]; then
+            echo "✓ All builds completed successfully!"
+            exit 0
+          else
+            echo "✗ Some builds failed or were skipped"
+            exit 1
+          fi
