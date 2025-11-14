@@ -12,7 +12,7 @@ echo Changing to build directory...
 cd build
 
 echo Configuring project with CMake...
-cmake .. -G "MinGW Makefiles" -DENABLE_TESTS=OFF
+cmake .. -G "MinGW Makefiles" -DENABLE_TESTS=ON
 if errorlevel 1 (
     echo CMake configuration failed
     exit /b 1
