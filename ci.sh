@@ -13,7 +13,7 @@ echo "Changing to build directory..."
 cd build
 
 echo "Configuring project with CMake..."
-cmake .. -DENABLE_TESTS=OFF
+cmake .. -DENABLE_TESTS=ON
 
 echo "Building project..."
 cmake --build .
