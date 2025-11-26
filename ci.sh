@@ -46,7 +46,7 @@ cd "${BUILD_DIR}"
 
 echo "[CI] Configuring project with CMake"
 # Use explicit source/build directory flags for clarity
-cmake -S .. -B . -DCMAKE_BUILD_TYPE="${CONFIG}"
+cmake -S .. -B . -DCMAKE_BUILD_TYPE="${CONFIG}" -DENABLE_TESTS=ON
 
 echo "[CI] Building project"
 # Prefer CMake's --parallel if available (CMake >= 3.12), otherwise fall back to passing -j to the native build tool
