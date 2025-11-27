@@ -1,7 +1,0 @@
-# ninja log v7
-18	78	7859419762254500	CMakeFiles/math_operations.dir/math_operations.cpp.obj	93833e4b9e7fcd04
-78	154	7859419762848170	libmath_operations.a	9f380158294899e2
-22	287	7859419762287158	CMakeFiles/main.dir/main.cpp.obj	557402e5eb3a7b17
-25	295	7859419762320217	CMakeFiles/unit_tests.dir/tests/unit_tests.cpp.obj	b71758f1864ee979
-289	368	7859419764953915	main.exe	98a9e660cd56fccd
-295	374	7859419765004162	unit_tests.exe	b0764eaf3fadfba5
