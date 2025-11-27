@@ -1,6 +1,6 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 # CI script for POSIX-like systems (Linux, macOS)
-set -eu
+set -euo pipefail
 
 BUILD_DIR=${BUILD_DIR:-build}
 CONFIG=${CONFIG:-Release}
@@ -23,14 +23,10 @@ detect_jobs() {
   fi
 }
 
-<<<<<<< HEAD
-echo "Configuring project with CMake..."
-cmake .. -DENABLE_TESTS=ON
-=======
 NUM_JOBS=$(detect_jobs)
->>>>>>> ff864ba (ci: add and harden CI scripts (ci.sh, ci.cmd, ci.ps1); add GH Actions workflow; update CI_SCRIPTS.md)
 
 echo "[CI] Detected CPU count: ${NUM_JOBS}"
+
 
 # Check for required tools early
 if ! command -v cmake >/dev/null 2>&1; then

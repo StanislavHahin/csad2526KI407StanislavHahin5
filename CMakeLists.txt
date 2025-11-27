@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(csad2526KI407StanislavHahin5 LANGUAGES CXX)
+project(csad2526_ki407_stanislav_hahin LANGUAGES CXX)
 
 # Require C++17
 set(CMAKE_CXX_STANDARD 17)
@@ -13,35 +13,31 @@ else()
     add_compile_options(-Wall -Wextra -Wpedantic -Wconversion)
 endif()
 
-# Main executable (falls back to root main.cpp)
-if(EXISTS ${CMAKE_SOURCE_DIR}/src/main.cpp)
-    add_executable(main ${CMAKE_SOURCE_DIR}/src/main.cpp)
-elseif(EXISTS ${CMAKE_SOURCE_DIR}/main.cpp)
-    add_executable(main ${CMAKE_SOURCE_DIR}/main.cpp)
+# Source files
+set(SRC_MAIN ${CMAKE_SOURCE_DIR}/main.cpp)
+set(SRC_MATH ${CMAKE_SOURCE_DIR}/math_operations.cpp)
+
+if(EXISTS ${SRC_MAIN})
+    add_executable(main ${SRC_MAIN})
 endif()
 
-# Provide a small library for math operations so tests can link to it
-add_library(math_operations STATIC ${CMAKE_SOURCE_DIR}/math_operations.cpp)
+add_library(math_operations STATIC ${SRC_MATH})
 target_include_directories(math_operations PUBLIC ${CMAKE_SOURCE_DIR})
+
+if(TARGET main)
+    target_link_libraries(main PRIVATE math_operations)
+endif()
 
 install(TARGETS main RUNTIME DESTINATION bin)
 
-# --- GoogleTest + unit tests setup ---
-include(FetchContent)
-FetchContent_Declare(
-  googletest
-  URL https://github.com/google/googletest/archive/refs/tags/release-1.14.0.tar.gz
-)
-# For Windows: prevent overriding the parent project's compiler/linker settings
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(googletest)
-
+# --- Unit tests (lightweight, no external dependency) ---
 enable_testing()
 
-# Unit test target
+# Provide a simple test runner executable that does not rely on GoogleTest so CI
+# can run without network access. The test source should return non-zero on
+# failure so CTest can detect failures.
 add_executable(unit_tests ${CMAKE_SOURCE_DIR}/tests/unit_tests.cpp)
-target_link_libraries(unit_tests PRIVATE gtest_main math_operations)
+target_link_libraries(unit_tests PRIVATE math_operations)
 target_include_directories(unit_tests PRIVATE ${CMAKE_SOURCE_DIR})
 
-include(GoogleTest)
-gtest_discover_tests(unit_tests)
+add_test(NAME unit_tests COMMAND unit_tests)

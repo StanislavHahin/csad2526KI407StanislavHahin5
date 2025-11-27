@@ -1,0 +1,10 @@
+C:/Users/gagin/Desktop/Repo/csad2526KI407StanislavHahin5/build/CMakeFiles/main.dir
+C:/Users/gagin/Desktop/Repo/csad2526KI407StanislavHahin5/build/CMakeFiles/math_operations.dir
+C:/Users/gagin/Desktop/Repo/csad2526KI407StanislavHahin5/build/CMakeFiles/unit_tests.dir
+C:/Users/gagin/Desktop/Repo/csad2526KI407StanislavHahin5/build/CMakeFiles/test.dir
+C:/Users/gagin/Desktop/Repo/csad2526KI407StanislavHahin5/build/CMakeFiles/edit_cache.dir
+C:/Users/gagin/Desktop/Repo/csad2526KI407StanislavHahin5/build/CMakeFiles/rebuild_cache.dir
+C:/Users/gagin/Desktop/Repo/csad2526KI407StanislavHahin5/build/CMakeFiles/list_install_components.dir
+C:/Users/gagin/Desktop/Repo/csad2526KI407StanislavHahin5/build/CMakeFiles/install.dir
+C:/Users/gagin/Desktop/Repo/csad2526KI407StanislavHahin5/build/CMakeFiles/install/local.dir
+C:/Users/gagin/Desktop/Repo/csad2526KI407StanislavHahin5/build/CMakeFiles/install/strip.dir
