@@ -1,8 +1,9 @@
+
 name: CI
 
 on:
   push:
-    branches: [ main, '**' ]
+    branches: [ main, 'feature/**' ]
   pull_request:
     branches: [ main ]
 
@@ -16,59 +17,14 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential cmake ninja-build wget
+          sudo apt-get install -y build-essential cmake ninja-build
 
-      - name: Configure
+      - name: Configure (CMake)
         run: |
-          mkdir -p build
-          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake -S . -B build -G "Ninja" -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
-        run: cmake --build build --config Release --parallel
+        run: cmake --build build --config Release --parallel 2
 
-      - name: Run tests
+      - name: Run tests (ctest)
         run: ctest --test-dir build --output-on-failure -C Release
-name: CI
-
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-
-jobs:
-  build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Show cmake & ctest versions
-        if: matrix.os != 'windows-latest'
-        run: |
-          cmake --version || true
-          ctest --version || true
-        shell: bash
-
-      - name: Show cmake & ctest versions (Windows)
-        if: matrix.os == 'windows-latest'
-        run: |
-          cmake --version || true
-          ctest --version || true
-        shell: pwsh
-
-      - name: Run POSIX script
-        if: matrix.os != 'windows-latest'
-        run: |
-          chmod +x ci.sh
-          ./ci.sh
-        shell: bash
-
-      - name: Run PowerShell script
-        if: matrix.os == 'windows-latest'
-        run: pwsh -NoProfile -ExecutionPolicy Bypass -File ./ci.ps1
-        shell: pwsh
