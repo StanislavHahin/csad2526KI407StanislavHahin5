@@ -1,60 +1,44 @@
-name: Cross-platform CI
+name: CI
 
 on:
   push:
-    branches:
-      - '*develop*'
-      - '*master*'
+    branches: [ main ]
   pull_request:
-    branches:
-      - '*develop*'
-      - '*master*'
+    branches: [ main ]
 
 jobs:
-  cross_build:
-    name: Cross-build on ${{ matrix.os }}
+  build:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Setup CMake (cross-platform)
-        uses: actions/setup-cmake@v4
-
-      - name: Make Linux/macOS script executable
-        if: runner.os != 'Windows'
-        run: chmod +x ./ci.sh
+      - name: Show cmake & ctest versions
+        if: matrix.os != 'windows-latest'
+        run: |
+          cmake --version || true
+          ctest --version || true
         shell: bash
 
-      - name: Install build tools (Ubuntu)
-        if: runner.os == 'Linux'
+      - name: Show cmake & ctest versions (Windows)
+        if: matrix.os == 'windows-latest'
         run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential
-        shell: bash
+          cmake --version || true
+          ctest --version || true
+        shell: pwsh
 
-      - name: Configure and build (Windows - Visual Studio)
-        if: runner.os == 'Windows'
+      - name: Run POSIX script
+        if: matrix.os != 'windows-latest'
         run: |
-          mkdir build
-          cd build
-          cmake .. -G "Visual Studio 17 2022" -A x64
-          cmake --build . --config Release
-          ctest -C Release --output-on-failure
-        shell: powershell
-
-      - name: Configure and build (Linux/macOS)
-        if: runner.os != 'Windows'
-        run: |
+          chmod +x ci.sh
           ./ci.sh
         shell: bash
 
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-artifacts-${{ matrix.os }}
-          path: build/**
+      - name: Run PowerShell script
+        if: matrix.os == 'windows-latest'
+        run: pwsh -NoProfile -ExecutionPolicy Bypass -File ./ci.ps1
+        shell: pwsh
