@@ -24,6 +24,12 @@ jobs:
       - name: Set up CMake
         uses: jwlawson/actions-setup-cmake@v2
 
+      - name: Install vcpkg
+        uses: lukka/run-vcpkg@v11
+
+      - name: Install GoogleTest
+        run: vcpkg install gtest
+
       - name: Configure
         run: cmake -S . -B build
 

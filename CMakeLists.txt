@@ -30,47 +30,14 @@ endif()
 
 install(TARGETS main RUNTIME DESTINATION bin)
 
-include(FetchContent)
-
-option(FORCE_FETCH_GTEST "Force fetching GoogleTest via FetchContent" OFF)
-
-# Try to obtain GoogleTest for CI (on GITHUB_ACTIONS) or when vendored copy exists.
-set(GTEST_AVAILABLE OFF)
-if(EXISTS ${CMAKE_SOURCE_DIR}/googletest-main/CMakeLists.txt)
-        message(STATUS "Using vendored googletest from ${CMAKE_SOURCE_DIR}/googletest-main")
-        add_subdirectory(${CMAKE_SOURCE_DIR}/googletest-main ${CMAKE_BINARY_DIR}/googletest)
-        set(GTEST_AVAILABLE ON)
-elseif(DEFINED ENV{GITHUB_ACTIONS} OR DEFINED ENV{CI} OR FORCE_FETCH_GTEST)
-        message(STATUS "Attempting to FetchContent googletest (CI or forced)")
-        FetchContent_Declare(
-            googletest
-            URL https://github.com/google/googletest/archive/refs/tags/release-1.14.0.tar.gz
-        )
-        set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-        FetchContent_MakeAvailable(googletest)
-        if(TARGET gtest_main)
-            set(GTEST_AVAILABLE ON)
-        endif()
-else()
-        find_package(GTest QUIET)
-        if(GTest_FOUND)
-            set(GTEST_AVAILABLE ON)
-        endif()
-endif()
+# Use system/package-managed GoogleTest (vcpkg or other) via find_package
+find_package(GTest CONFIG REQUIRED)
 
 enable_testing()
 
-# Unit test target: single source supports both GoogleTest and lightweight fallback
 add_executable(unit_tests ${CMAKE_SOURCE_DIR}/tests/unit_tests.cpp)
 target_include_directories(unit_tests PRIVATE ${CMAKE_SOURCE_DIR})
-target_link_libraries(unit_tests PRIVATE math_operations)
-
-if(GTEST_AVAILABLE)
-    target_compile_definitions(unit_tests PRIVATE USE_GTEST)
-    target_link_libraries(unit_tests PRIVATE gtest_main)
-    message(STATUS "Unit tests will be built with GoogleTest")
-else()
-    message(STATUS "GoogleTest not available; building lightweight test runner")
-endif()
+target_link_libraries(unit_tests PRIVATE math_operations GTest::gtest GTest::gtest_main)
+target_compile_definitions(unit_tests PRIVATE USE_GTEST)
 
 add_test(NAME unit_tests COMMAND unit_tests)
