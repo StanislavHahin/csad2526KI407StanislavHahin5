@@ -1,6 +1,4 @@
 #include "math_operations.h"
-
-#if defined(USE_GTEST)
 #include <gtest/gtest.h>
 
 TEST(AddTest, PositiveNumbers) {
