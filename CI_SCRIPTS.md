@@ -1,34 +1,59 @@
-CI Scripts
-==========
+# CI/CD Scripts Documentation
 
-This repository provides two convenience scripts for running the project's build and tests locally or in CI environments:
+## Overview
+This project includes CI/CD scripts for automated building and testing across multiple platforms.
 
-- `ci.sh` — POSIX-compatible shell script for Linux/macOS
-- `ci.cmd` — Windows batch script for cmd.exe
-- `ci.ps1` — PowerShell script (recommended on Windows / cross-platform via PowerShell Core)
+## Scripts
 
-How to run:
+### Windows
+- **ci.bat** - Windows batch script for building and testing
+- **ci.cmd** - Alternative Windows batch format (same functionality as ci.bat)
 
-POSIX (Linux/macOS):
+Usage:
+```cmd
+.\ci.bat
 ```
+
+### Linux/macOS
+- **ci.sh** - Bash script for building and testing
+
+Usage:
+```bash
+chmod +x ci.sh
 ./ci.sh
 ```
 
-Windows (cmd.exe):
-```
-ci.cmd
-```
-Note: `ci.cmd --mode test` will only run tests using an *already configured* build directory. If the build directory is not configured (no `CMakeCache.txt` present), the script will print a helpful error suggesting to run `ci.cmd --mode all` or `ci.cmd --mode build` first.
+## What the Scripts Do
 
-Behavior:
-- Creates a `build/` directory if it doesn't exist
-- Configures CMake to use `CMAKE_BUILD_TYPE=Release` (configurable via `CONFIG`/`CMAKE_BUILD_TYPE`) and runs the build
-- Runs `ctest` and prints any failing test output (skips tests if `ctest` isn't found)
-- Attempts to build in parallel using CMake's `--parallel` option when available; falls back to native `-j` or `/m` flags if required
-- Checks that `cmake` is available and prints a helpful error message if missing
+1. **Create build directory** - Creates a `build/` directory for out-of-source builds
+2. **Configure project** - Runs CMake with appropriate generator for the platform
+3. **Build project** - Compiles the project using the configured build system
+4. **Run tests** - Executes unit tests via CTest (if available)
 
-Notes:
-- The scripts assume `cmake`, a C/C++ compiler and `ctest` are available on your PATH
-- On Windows, Visual Studio developer tools (or a working C/C++ toolchain) are required
-- `ci.ps1` (PowerShell) is available for Windows and PowerShell Core runners
-- A GitHub Actions workflow `.github/workflows/ci.yml` is included to invoke these scripts on Linux/Windows/macOS
+## Build Requirements
+
+- CMake (3.10 or higher)
+- C++ compiler (MinGW, GCC, Clang, or MSVC)
+- Make/build tools appropriate for your platform
+
+### Windows
+- MinGW (for MinGW Makefiles generator)
+
+### Linux/macOS
+- GCC/Clang
+- Make
+
+## Environment Variables
+
+Tests are currently disabled by default using `-DENABLE_TESTS=OFF` in CMake configuration to ensure compatibility when external dependencies (like Google Test) cannot be downloaded. To enable tests locally, modify the CMake command in the scripts.
+
+## Output
+
+The scripts generate:
+- `build/main.exe` (Windows) or `build/main` (Linux/macOS) - Main executable
+- `build/libmath_operations.a` - Math operations library
+
+## Exit Codes
+
+- `0` - Build and tests completed successfully
+- `1` - Build or configuration failed
