@@ -2,16 +2,17 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
+-- Testbench для верифікації I2C master Tx/Rx
 entity tb_i2c is
 end entity;
 
 architecture sim of tb_i2c is
 
-    -- системний такт
+    -- Системний тактовий сигнал і скидання
     signal clk       : std_logic := '0';
     signal rst       : std_logic := '1';
 
-    -- для TX
+    -- Інтерфейс передавача (Tx)
     signal start_tx  : std_logic := '0';
     signal data_in   : std_logic_vector(7 downto 0) := (others => '0');
     signal scl_tx    : std_logic;
@@ -19,7 +20,7 @@ architecture sim of tb_i2c is
     signal tx_done   : std_logic;
     signal ack_in    : std_logic := '1';
 
-    -- для RX
+    -- Інтерфейс приймача (Rx)
     signal start_rx  : std_logic := '0';
     signal scl_rx    : std_logic;
     signal sda_rx    : std_logic := '1';
@@ -28,14 +29,10 @@ architecture sim of tb_i2c is
 
 begin
 
-    -------------------------------------------------------------------------
-    -- Генерація системного такту (20 нс – 50 МГц)
-    -------------------------------------------------------------------------
+    -- Генерація системного такту 50 МГц (період 20 нс)
     clk <= not clk after 10 ns;
 
-    -------------------------------------------------------------------------
-    -- ПІДКЛЮЧЕННЯ TX
-    -------------------------------------------------------------------------
+    -- Інстанціювання модуля передавача I2C
     U_TX: entity work.i2c_master_tx
         port map (
             clk      => clk,
@@ -48,11 +45,7 @@ begin
             ack_in   => ack_in
         );
 
-    -------------------------------------------------------------------------
-    -- ПІДКЛЮЧЕННЯ RX
-    -- Зауваження: твій RX не використовує scl, але ми виводимо scl_rx для
-    -- можливого майбутнього розширення.
-    -------------------------------------------------------------------------
+    -- Інстанціювання модуля приймача I2C
     U_RX: entity work.i2c_master_rx
         port map (
             clk      => clk,
@@ -64,62 +57,50 @@ begin
             rx_done  => rx_done
         );
 
-    -------------------------------------------------------------------------
-    -- СТИМУЛИ
-    -------------------------------------------------------------------------
+    -- Основний процес стимулів для Tx і Rx
     stim_proc : process
-        constant RX_BYTE : std_logic_vector(7 downto 0) := "01011001";
+        constant RX_BYTE : std_logic_vector(7 downto 0) := "01011001";  -- тестовий байт для Rx
         variable i       : integer;
     begin
-        ---------------------------------------------------------------------
-        -- RESET
-        ---------------------------------------------------------------------
+        -- Ініціалізація та скидання
         rst <= '1';
         wait for 100 ns;
         rst <= '0';
         wait for 50 ns;
 
-        ---------------------------------------------------------------------
-        -- ТЕСТ TX: передати 10101010 з ACK=0
-        ---------------------------------------------------------------------
+        -- Тест передавача: передаємо 10101010 з постійним ACK=0
         data_in <= "10101010";
-        ack_in  <= '0';          -- завжди ACK
+        ack_in  <= '0';
 
         start_tx <= '1';
         wait until rising_edge(clk);
         start_tx <= '0';
 
         wait until tx_done = '1';
-        wait for 5*20 ns;        -- трохи часу після завершення
+        wait for 5*20 ns;        -- пауза після завершення передачі
 
-        ---------------------------------------------------------------------
-        -- ТЕСТ RX: подати байт RX_BYTE на sda_rx по одному біту за такт
-        ---------------------------------------------------------------------
+        -- Тест приймача: подаємо RX_BYTE по одному біту за такт (MSB→LSB)
         start_rx <= '1';
         wait until rising_edge(clk);
         start_rx <= '0';
 
-        -- RX у стані RECV_BIT кожен такт читає SDA у data_reg(7..0),
-        -- тому просто подаємо MSB→LSB на 8 наступних фронтів clk.
         for i in 0 to 7 loop
             sda_rx <= RX_BYTE(7 - i);
             wait until rising_edge(clk);
         end loop;
 
-        -- після 8 бітів RX переходить до STOP/DONE і піднімає rx_done
+        -- Очікуємо сигнал завершення прийому
         wait until rx_done = '1';
         wait for 20 ns;
 
-        -- Перевірка: rx_data == RX_BYTE
+        -- Проста перевірка коректності прийнятих даних
         if rx_data = RX_BYTE then
-            report "RX OK: received " severity note;
+            report "RX OK: received expected byte" severity note;
         else
-            report "RX FAIL: expected 01011001, got " severity error;
+            report "RX FAIL: expected 01011001, got different value" severity error;
         end if;
 
-        ---------------------------------------------------------------------
-        -- КІНЕЦЬ СИМУЛЯЦІЇ
-        ---------------------------------------------------------------------
+        -- Завершення симуляції
         wait for 500 ns;
         report "SIM DONE" severity note;
         wait;
